@@ -4,7 +4,7 @@ dotenv.config()
 
 import express from 'express'
 
-import infowayService from '../services/infowayService.js'
+import metaApiPriceService from '../services/metaApiPriceService.js'
 
 
 
@@ -34,7 +34,7 @@ const POPULAR_INSTRUMENTS = {
 
 function categorizeSymbol(symbol) {
 
-  return infowayService.categorizeSymbol(symbol)
+  return metaApiPriceService.categorizeSymbol(symbol)
 
 }
 
@@ -224,7 +224,7 @@ router.get('/instruments', async (req, res) => {
 
     // Get price cache from Infoway service
 
-    const priceCache = infowayService.getPriceCache()
+    const priceCache = metaApiPriceService.getPriceCache()
 
     
 
@@ -436,7 +436,7 @@ router.get('/:symbol', async (req, res) => {
 
     const { symbol } = req.params
 
-    const SYMBOL_MAP = infowayService.SYMBOL_MAP
+    const SYMBOL_MAP = metaApiPriceService.SYMBOL_MAP
 
     
 
@@ -452,7 +452,7 @@ router.get('/:symbol', async (req, res) => {
 
     // Try to get from cache first
 
-    let price = infowayService.getPrice(symbol)
+    let price = metaApiPriceService.getPrice(symbol)
 
     
 
@@ -460,7 +460,7 @@ router.get('/:symbol', async (req, res) => {
 
     if (!price) {
 
-      price = await infowayService.fetchPriceREST(symbol)
+      price = await metaApiPriceService.fetchPriceREST(symbol)
 
     }
 
@@ -504,7 +504,7 @@ router.post('/batch', async (req, res) => {
 
     
 
-    const SYMBOL_MAP = infowayService.SYMBOL_MAP
+    const SYMBOL_MAP = metaApiPriceService.SYMBOL_MAP
 
     const prices = {}
 
@@ -520,7 +520,7 @@ router.post('/batch', async (req, res) => {
 
       
 
-      const cached = infowayService.getPrice(symbol)
+      const cached = metaApiPriceService.getPrice(symbol)
 
       if (cached) {
 
@@ -540,7 +540,7 @@ router.post('/batch', async (req, res) => {
 
     if (missingSymbols.length > 0) {
 
-      const batchPrices = await infowayService.fetchBatchPricesREST(missingSymbols)
+      const batchPrices = await metaApiPriceService.fetchBatchPricesREST(missingSymbols)
 
       for (const [symbol, price] of Object.entries(batchPrices)) {
 

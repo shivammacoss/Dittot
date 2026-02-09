@@ -154,15 +154,13 @@ const HeroSection = () => {
 
           className="w-full h-full object-cover"
 
-          poster="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/a30101db-b978-4ecc-8998-3de500870677-robinhood-com/assets/images/EU_Web_Landing_Hero_Desktop_Short-1.jpg"
-
         >
 
           <source 
 
-            src="https://videos.ctfassets.net/ilblxxee70tt/2s4toSMKFMvqnwyBZyS6LD/16627808bbf120f5a1264d23b1007278/EU_Web_Landing_Hero_Desktop_Short.webm" 
+            src="/DittoTvideo.mp4" 
 
-            type="video/webm" 
+            type="video/mp4" 
 
           />
 
@@ -284,7 +282,7 @@ const InvestStockTokens = () => {
 
             <p className="text-[12px] leading-[1.6] text-black/70">
 
-              Stock Tokens are derivative contracts between you and PowerTradeFX. They carry a high level of risk and are not appropriate for all investors.
+              Stock Tokens are derivative contracts between you and dittotFX. They carry a high level of risk and are not appropriate for all investors.
 
             </p>
 
@@ -332,7 +330,7 @@ const CryptoPromo = () => {
 
           <div className="mb-8 flex items-center gap-2">
 
-            <span className="text-white text-[24px] font-medium">PowerTradeFX Crypto</span>
+            <span className="text-white text-[24px] font-medium">dittotFX Crypto</span>
 
           </div>
 
@@ -658,7 +656,7 @@ const Footer = () => {
 
             <p>
 
-              Stock Tokens are derivative contracts between you and PowerTradeFX. They carry a high level of risk and are not appropriate for all investors.
+              Stock Tokens are derivative contracts between you and dittotFX. They carry a high level of risk and are not appropriate for all investors.
 
             </p>
 
@@ -668,7 +666,7 @@ const Footer = () => {
 
             </p>
 
-            <p>© 2025 PowerTradeFX. All rights reserved.</p>
+            <p>© 2025 dittotFX. All rights reserved.</p>
 
           </div>
 
@@ -678,7 +676,7 @@ const Footer = () => {
 
           <h1 className="text-[18vw] lg:text-[20vw] font-bold leading-[1] tracking-tighter">
 
-            PowerTradeFX
+            dittotFX
 
           </h1>
 
