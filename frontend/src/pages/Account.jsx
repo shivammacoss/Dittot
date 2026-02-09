@@ -31,7 +31,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { API_URL } from '../config/api'
-const logoImage = '/DittoTlogopng.png'
+import { logoImage } from '../assets/index.js'
 
 const Account = () => {
   const navigate = useNavigate()

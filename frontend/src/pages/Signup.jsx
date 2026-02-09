@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { X, Mail, ChevronDown, Search, Eye, EyeOff, RefreshCw, ArrowLeft } from 'lucide-react'
 import { signup } from '../api/auth'
 import { API_URL } from '../config/api'
+import { logoImage } from '../assets/index.js'
 
 const countries = [
   { code: '+1', name: 'United States', flag: '🇺🇸' },
@@ -310,7 +311,7 @@ const Signup = () => {
 
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <img src="/DittoTlogopng.png" alt="DittoT" className="h-12 w-auto" />
+          <img src={logoImage} alt="DittoT" className="h-12 w-auto" />
         </div>
 
         {/* Tabs */}

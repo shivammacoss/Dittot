@@ -54,7 +54,7 @@ import {
 
 } from 'lucide-react'
 
-const logoImage = '/DittoTlogopng.png'
+import { logoImage } from '../assets/index.js'
 
 
 
@@ -274,7 +274,7 @@ const AdminLayout = ({ children, title, subtitle }) => {
 
           <div className="flex items-center gap-2">
 
-            <img src={logoImage} alt="SetupFX" className="h-8 w-auto object-contain flex-shrink-0" />
+            <img src={logoImage} alt="DittoT" className="h-8 w-auto object-contain flex-shrink-0" />
 
           </div>
 

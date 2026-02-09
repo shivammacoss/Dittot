@@ -4,6 +4,8 @@ import { ChevronDown, Globe } from 'lucide-react'
 
 import { useNavigate } from 'react-router-dom'
 
+import { logoImage, heroVideo } from '../assets/index.js'
+
 
 
 // Navigation Component
@@ -52,7 +54,7 @@ const Navigation = () => {
 
             <img
 
-              src="/DittoTlogopng.png"
+              src={logoImage}
 
               alt="DittoT Logo"
 
@@ -158,7 +160,7 @@ const HeroSection = () => {
 
           <source 
 
-            src="/DittoTvideo.mp4" 
+            src={heroVideo} 
 
             type="video/mp4" 
 
@@ -176,43 +178,7 @@ const HeroSection = () => {
 
       </div>
 
-      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-6 text-center">
-
-        <div className="max-w-[1000px] flex flex-col items-center">
-
-          <h1 
-
-            className="text-white mb-6"
-
-            style={{ fontSize: 'clamp(3.5rem, 8vw, 5.25rem)', lineHeight: '1.1', fontWeight: 300, letterSpacing: '-0.02em' }}
-
-          >
-
-            One place for all your investments
-
-          </h1>
-
-          <p className="text-white text-lg md:text-xl font-normal max-w-[640px] mb-10 opacity-90" style={{ lineHeight: '1.6' }}>
-
-            Everything you need to start investing is here. From Stock Tokens to crypto—buy, sell, and manage it all in one place.
-
-          </p>
-
-          <button
-
-            onClick={() => navigate('/user/signup')}
-
-            className="inline-flex items-center justify-center bg-[#CFF12F] hover:bg-[#CFF12F]/90 active:scale-[0.98] transition-all duration-200 text-black px-8 py-3 rounded-full text-base font-medium min-w-[140px]"
-
-          >
-
-            Get started
-
-          </button>
-
-        </div>
-
-      </div>
+    
 
     </section>
 

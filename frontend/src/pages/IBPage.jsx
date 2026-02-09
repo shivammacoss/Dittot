@@ -16,7 +16,7 @@ import { useTheme } from '../context/ThemeContext'
 
 import { API_URL } from '../config/api'
 
-const logoImage = '/DittoTlogopng.png'
+import { logoImage } from '../assets/index.js'
 
 
 
@@ -534,7 +534,7 @@ const IBPage = () => {
 
           <div className="p-4 flex items-center justify-center">
 
-            <img src={logoImage} alt="SetupFX" className="h-8 w-auto object-contain" />
+            <img src={logoImage} alt="DittoT" className="h-8 w-auto object-contain" />
 
           </div>
 

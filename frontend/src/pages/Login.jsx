@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { login } from '../api/auth'
+import { logoImage } from '../assets/index.js'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -65,7 +66,7 @@ const Login = () => {
 
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <img src="/DittoTlogopng.png" alt="DittoT" className="h-12 w-auto" />
+          <img src={logoImage} alt="DittoT" className="h-12 w-auto" />
         </div>
 
         {/* Tabs */}
