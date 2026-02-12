@@ -19,7 +19,6 @@ import {
   Shield
 } from 'lucide-react'
 import priceService from '../services/priceService'
-import binanceApiService from '../services/binanceApi'
 import priceStreamService from '../services/priceStream'
 import { API_URL } from '../config/api'
 
@@ -342,14 +341,8 @@ const AdminTradeManagement = () => {
     setShowCloseModal(true)
     // Fetch current market price for closing
     try {
-      const cryptoSymbols = ['BTCUSD', 'ETHUSD', 'BTCUSDT', 'ETHUSDT']
       let priceData = null
-      if (cryptoSymbols.includes(trade.symbol)) {
-        const prices = await binanceApiService.getAllPrices([trade.symbol])
-        priceData = prices[trade.symbol]
-      } else {
-        priceData = await priceService.getSymbolPrice(trade.symbol)
-      }
+      priceData = await priceService.getSymbolPrice(trade.symbol)
       if (priceData) {
         const closePrice = trade.side === 'BUY' ? priceData.bid : priceData.ask
         setCloseFormPrice(closePrice)

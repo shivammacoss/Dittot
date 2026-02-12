@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Search, Star, X, Plus, Minus, Settings, Home, Wallet, LayoutGrid, BarChart3, Pencil, Trophy, AlertTriangle, Sun, Moon, Grid2X2, Download, RefreshCw } from 'lucide-react'
 import priceService from '../services/priceService'
-import binanceApiService from '../services/binanceApi'
 import priceStreamService from '../services/priceStream'
 import { useTheme } from '../context/ThemeContext'
 import { API_URL } from '../config/api'
@@ -133,10 +132,10 @@ const TradingPage = () => {
     // Fetch admin-set spreads
     fetchAdminSpreads()
     
-    // Refresh prices every 2 seconds for real-time P/L updates
+    // Refresh prices every 10 seconds as fallback (Socket.IO handles real-time tick-to-tick)
     const priceInterval = setInterval(() => {
       fetchLivePrices()
-    }, 2000)
+    }, 10000)
     
     return () => {
       clearInterval(priceInterval)

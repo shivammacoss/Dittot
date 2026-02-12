@@ -45,11 +45,14 @@ const AdminBookManagement = () => {
   const [mt5Testing, setMt5Testing] = useState(false)
   const [mt5TestResult, setMt5TestResult] = useState(null)
   const [mt5Saving, setMt5Saving] = useState(false)
+  const [priceFeed, setPriceFeed] = useState(null)
+  const [priceFeedLoading, setPriceFeedLoading] = useState(true)
 
   useEffect(() => {
     fetchUsers()
     fetchMT5Status()
     fetchMT5Settings()
+    fetchPriceFeedStatus()
   }, [filterBook])
 
   useEffect(() => {
@@ -144,6 +147,20 @@ const AdminBookManagement = () => {
       console.error('Error fetching MT5 status:', error)
     }
     setMt5Loading(false)
+  }
+
+  const fetchPriceFeedStatus = async () => {
+    setPriceFeedLoading(true)
+    try {
+      const response = await fetch(`${API_URL}/book-management/price-feed-status`)
+      if (response.ok) {
+        const data = await response.json()
+        setPriceFeed(data)
+      }
+    } catch (error) {
+      console.error('Error fetching price feed status:', error)
+    }
+    setPriceFeedLoading(false)
   }
 
   const fetchMT5Settings = async () => {
@@ -361,215 +378,276 @@ const AdminBookManagement = () => {
         </div>
       </div>
 
-      {/* MT5 Connection Status */}
-      <div className="bg-dark-800 border border-gray-700/50 rounded-xl p-4 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Server size={18} className="text-gray-400" />
-            <h4 className="text-sm font-semibold text-white">MT5 Connection (A Book Trade Push)</h4>
-            {mt5Status?.mt5?.source === 'database' && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">DB</span>
-            )}
-            {mt5Status?.mt5?.source === 'env' && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30">.env</span>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            <button onClick={() => { setShowMt5Settings(!showMt5Settings); setMt5TestResult(null) }} className="p-1.5 hover:bg-dark-700 rounded-lg transition-colors" title="MT5 Settings">
-              <Settings size={14} className="text-gray-400" />
-            </button>
-            <button onClick={() => { fetchMT5Status(); fetchMT5Settings() }} className="p-1.5 hover:bg-dark-700 rounded-lg transition-colors" title="Refresh">
-              <RefreshCw size={14} className={`text-gray-400 ${mt5Loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
+      {/* MT5 Accounts — Price Feed & Trade Push */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
 
-        {/* Connected Status */}
-        {mt5Loading && !mt5Status ? (
-          <div className="text-sm text-gray-500">Loading MT5 status...</div>
-        ) : mt5Status?.mt5?.connected ? (
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-xs font-semibold text-green-400">Connected</span>
-                </div>
-                <button onClick={disconnectMT5} className="p-1 hover:bg-red-500/20 rounded transition-colors" title="Disconnect MT5">
-                  <Trash2 size={12} className="text-gray-500 hover:text-red-400" />
-                </button>
+        {/* Price Feed Account (.env) — read-only */}
+        <div className="bg-dark-800 border border-gray-700/50 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Server size={16} className="text-blue-400" />
+              <h4 className="text-sm font-semibold text-white">Price Feed Account</h4>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30">.env</span>
+            </div>
+            <button onClick={fetchPriceFeedStatus} className="p-1.5 hover:bg-dark-700 rounded-lg transition-colors" title="Refresh">
+              <RefreshCw size={14} className={`text-gray-400 ${priceFeedLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+          {priceFeedLoading && !priceFeed ? (
+            <div className="text-sm text-gray-500">Loading...</div>
+          ) : priceFeed?.connected ? (
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                <span className="text-xs font-semibold text-blue-400">Connected — Prices Only</span>
               </div>
               <div className="space-y-1">
-                {mt5Settings?.label && (
-                  <div className="flex justify-between">
-                    <span className="text-xs text-gray-500">Label</span>
-                    <span className="text-xs text-white font-medium">{mt5Settings.label}</span>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <span className="text-xs text-gray-500">Server</span>
-                  <span className="text-xs text-white">{mt5Status.mt5.server}</span>
+                  <span className="text-xs text-white">{priceFeed.server}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-xs text-gray-500">Login</span>
-                  <span className="text-xs text-white">{mt5Status.mt5.login}</span>
+                  <span className="text-xs text-white">{priceFeed.login}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-xs text-gray-500">Name</span>
-                  <span className="text-xs text-white">{mt5Status.mt5.name}</span>
+                  <span className="text-xs text-white">{priceFeed.name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-xs text-gray-500">Balance</span>
-                  <span className="text-xs text-white">${mt5Status.mt5.balance?.toFixed(2)} {mt5Status.mt5.currency}</span>
+                  <span className="text-xs text-white font-medium">${priceFeed.balance?.toFixed(2)} {priceFeed.currency}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-gray-500">Equity</span>
+                  <span className={`text-xs font-medium ${priceFeed.equity >= priceFeed.balance ? 'text-green-400' : 'text-red-400'}`}>${priceFeed.equity?.toFixed(2)} {priceFeed.currency}</span>
                 </div>
               </div>
             </div>
-            <div className="flex-1 p-3 bg-dark-700 rounded-lg">
-              <p className="text-xs font-semibold text-gray-400 mb-2">Trade Push Stats</p>
+          ) : (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Unlink size={14} className="text-red-400" />
+                <span className="text-sm text-red-400">Not Connected</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Set METAAPI_TOKEN and METAAPI_ACCOUNT_ID in .env</p>
+              {priceFeed?.error && <p className="text-xs text-red-400 mt-1">{priceFeed.error}</p>}
+            </div>
+          )}
+        </div>
+
+        {/* Trade Push Account (DB settings) — configurable */}
+        <div className="bg-dark-800 border border-gray-700/50 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Shield size={16} className="text-green-400" />
+              <h4 className="text-sm font-semibold text-white">Trade Push Account</h4>
+              {mt5Status?.mt5?.source === 'database' && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">DB</span>
+              )}
+              {mt5Status?.mt5?.source === 'env' && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30">.env</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => { setShowMt5Settings(!showMt5Settings); setMt5TestResult(null) }} className="p-1.5 hover:bg-dark-700 rounded-lg transition-colors" title="Settings">
+                <Settings size={14} className="text-gray-400" />
+              </button>
+              <button onClick={() => { fetchMT5Status(); fetchMT5Settings() }} className="p-1.5 hover:bg-dark-700 rounded-lg transition-colors" title="Refresh">
+                <RefreshCw size={14} className={`text-gray-400 ${mt5Loading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {mt5Loading && !mt5Status ? (
+            <div className="text-sm text-gray-500">Loading...</div>
+          ) : mt5Status?.mt5?.connected ? (
+            <div className="space-y-3">
+              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span className="text-xs font-semibold text-green-400">Connected — A Book Push</span>
+                  </div>
+                  <button onClick={disconnectMT5} className="p-1 hover:bg-red-500/20 rounded transition-colors" title="Disconnect">
+                    <Trash2 size={12} className="text-gray-500 hover:text-red-400" />
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  {mt5Settings?.label && (
+                    <div className="flex justify-between">
+                      <span className="text-xs text-gray-500">Label</span>
+                      <span className="text-xs text-white font-medium">{mt5Settings.label}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">Server</span>
+                    <span className="text-xs text-white">{mt5Status.mt5.server}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">Login</span>
+                    <span className="text-xs text-white">{mt5Status.mt5.login}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">Name</span>
+                    <span className="text-xs text-white">{mt5Status.mt5.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">Balance</span>
+                    <span className="text-xs text-white">${mt5Status.mt5.balance?.toFixed(2)} {mt5Status.mt5.currency}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-gray-500">Equity</span>
+                    <span className={`text-xs font-medium ${mt5Status.mt5.equity >= mt5Status.mt5.balance ? 'text-green-400' : 'text-red-400'}`}>${mt5Status.mt5.equity?.toFixed(2)} {mt5Status.mt5.currency}</span>
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="text-center">
+                <div className="text-center p-2 bg-dark-700 rounded-lg">
                   <p className="text-lg font-bold text-green-400">{mt5Status.pushStats?.pushed || 0}</p>
                   <p className="text-xs text-gray-500">Pushed</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-2 bg-dark-700 rounded-lg">
                   <p className="text-lg font-bold text-red-400">{mt5Status.pushStats?.failed || 0}</p>
                   <p className="text-xs text-gray-500">Failed</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-2 bg-dark-700 rounded-lg">
                   <p className="text-lg font-bold text-yellow-400">{mt5Status.pushStats?.pending || 0}</p>
                   <p className="text-xs text-gray-500">Pending</p>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Unlink size={14} className="text-red-400" />
-              <span className="text-sm text-red-400">MT5 Not Connected</span>
+          ) : (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Unlink size={14} className="text-red-400" />
+                <span className="text-sm text-red-400">Not Connected</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Click <Settings size={12} className="inline" /> to connect an MT5 account for A Book trade pushing.</p>
+              {mt5Status?.mt5?.error && <p className="text-xs text-red-400 mt-1">{mt5Status.mt5.error}</p>}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Click the <Settings size={12} className="inline" /> settings icon above to connect your MetaTrader 5 account for A Book trade pushing.</p>
-            {mt5Status?.mt5?.error && (
-              <p className="text-xs text-red-400 mt-1">Error: {mt5Status.mt5.error}</p>
-            )}
-          </div>
-        )}
+          )}
 
-        {/* MT5 Settings Form (collapsible) */}
-        {showMt5Settings && (
-          <div className="mt-4 p-4 bg-dark-700 rounded-lg border border-gray-600 space-y-4">
-            <div className="flex items-center justify-between">
-              <h5 className="text-sm font-semibold text-white flex items-center gap-2">
-                <Plug size={14} className="text-blue-400" />
-                {mt5Status?.mt5?.connected ? 'Change MT5 Account' : 'Connect MT5 Account'}
-              </h5>
-              <button onClick={() => { setShowMt5Settings(false); setMt5TestResult(null) }} className="p-1 hover:bg-dark-600 rounded transition-colors">
-                <X size={14} className="text-gray-400" />
-              </button>
-            </div>
+          {/* Trade Push Settings Form (collapsible) */}
+          {showMt5Settings && (
+            <div className="mt-3 p-4 bg-dark-700 rounded-lg border border-gray-600 space-y-4">
+              <div className="flex items-center justify-between">
+                <h5 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <Plug size={14} className="text-blue-400" />
+                  {mt5Status?.mt5?.connected ? 'Change Trade Push Account' : 'Connect Trade Push Account'}
+                </h5>
+                <button onClick={() => { setShowMt5Settings(false); setMt5TestResult(null) }} className="p-1 hover:bg-dark-600 rounded transition-colors">
+                  <X size={14} className="text-gray-400" />
+                </button>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-400 mb-1">MetaApi Token</label>
-                <input
-                  type="password"
-                  value={mt5Form.metaApiToken}
-                  onChange={(e) => setMt5Form({ ...mt5Form, metaApiToken: e.target.value })}
-                  placeholder={mt5Settings?.hasToken ? 'Enter new token to change (current: ' + mt5Settings.metaApiToken + ')' : 'Enter your MetaApi token'}
-                  className="w-full px-3 py-2 bg-dark-800 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-400 mb-1">MetaApi Token</label>
+                  <input
+                    type="password"
+                    value={mt5Form.metaApiToken}
+                    onChange={(e) => setMt5Form({ ...mt5Form, metaApiToken: e.target.value })}
+                    placeholder={mt5Settings?.hasToken ? 'Enter new token to change (current: ' + mt5Settings.metaApiToken + ')' : 'Enter your MetaApi token'}
+                    className="w-full px-3 py-2 bg-dark-800 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Account ID</label>
+                  <input
+                    type="text"
+                    value={mt5Form.accountId}
+                    onChange={(e) => setMt5Form({ ...mt5Form, accountId: e.target.value })}
+                    placeholder="MetaApi Account ID"
+                    className="w-full px-3 py-2 bg-dark-800 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Region</label>
+                  <select
+                    value={mt5Form.region}
+                    onChange={(e) => setMt5Form({ ...mt5Form, region: e.target.value })}
+                    className="w-full px-3 py-2 bg-dark-800 border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="new-york">New York</option>
+                    <option value="london">London</option>
+                    <option value="singapore">Singapore</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Label (optional)</label>
+                  <input
+                    type="text"
+                    value={mt5Form.label}
+                    onChange={(e) => setMt5Form({ ...mt5Form, label: e.target.value })}
+                    placeholder="e.g. My Demo Account"
+                    className="w-full px-3 py-2 bg-dark-800 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Account ID</label>
-                <input
-                  type="text"
-                  value={mt5Form.accountId}
-                  onChange={(e) => setMt5Form({ ...mt5Form, accountId: e.target.value })}
-                  placeholder="MetaApi Account ID"
-                  className="w-full px-3 py-2 bg-dark-800 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Region</label>
-                <select
-                  value={mt5Form.region}
-                  onChange={(e) => setMt5Form({ ...mt5Form, region: e.target.value })}
-                  className="w-full px-3 py-2 bg-dark-800 border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500"
-                >
-                  <option value="new-york">New York</option>
-                  <option value="london">London</option>
-                  <option value="singapore">Singapore</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-400 mb-1">Label (optional)</label>
-                <input
-                  type="text"
-                  value={mt5Form.label}
-                  onChange={(e) => setMt5Form({ ...mt5Form, label: e.target.value })}
-                  placeholder="e.g. My Demo Account"
-                  className="w-full px-3 py-2 bg-dark-800 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
 
-            {/* Test Result */}
-            {mt5TestResult && (
-              <div className={`p-3 rounded-lg border ${mt5TestResult.connected ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                {mt5TestResult.connected ? (
-                  <div className="space-y-1">
+              {/* Test Result */}
+              {mt5TestResult && (
+                <div className={`p-3 rounded-lg border ${mt5TestResult.connected ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                  {mt5TestResult.connected ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Check size={14} className="text-green-400" />
+                        <span className="text-xs font-semibold text-green-400">Connection Successful</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 mt-2">
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-500">Server</span>
+                          <span className="text-xs text-white">{mt5TestResult.server}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-500">Login</span>
+                          <span className="text-xs text-white">{mt5TestResult.login}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-500">Name</span>
+                          <span className="text-xs text-white">{mt5TestResult.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-500">Balance</span>
+                          <span className="text-xs text-white">${mt5TestResult.balance?.toFixed(2)} {mt5TestResult.currency}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-500">Equity</span>
+                          <span className={`text-xs font-medium ${mt5TestResult.equity >= mt5TestResult.balance ? 'text-green-400' : 'text-red-400'}`}>${mt5TestResult.equity?.toFixed(2)} {mt5TestResult.currency}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
                     <div className="flex items-center gap-2">
-                      <Check size={14} className="text-green-400" />
-                      <span className="text-xs font-semibold text-green-400">Connection Successful</span>
+                      <AlertTriangle size={14} className="text-red-400" />
+                      <span className="text-xs text-red-400">Connection Failed: {mt5TestResult.error}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-1 mt-2">
-                      <div className="flex justify-between">
-                        <span className="text-xs text-gray-500">Server</span>
-                        <span className="text-xs text-white">{mt5TestResult.server}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs text-gray-500">Login</span>
-                        <span className="text-xs text-white">{mt5TestResult.login}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs text-gray-500">Name</span>
-                        <span className="text-xs text-white">{mt5TestResult.name}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs text-gray-500">Balance</span>
-                        <span className="text-xs text-white">${mt5TestResult.balance?.toFixed(2)} {mt5TestResult.currency}</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle size={14} className="text-red-400" />
-                    <span className="text-xs text-red-400">Connection Failed: {mt5TestResult.error}</span>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
 
-            <div className="flex gap-2">
-              <button
-                onClick={testMT5Connection}
-                disabled={mt5Testing || !mt5Form.metaApiToken || !mt5Form.accountId}
-                className="flex-1 px-4 py-2 bg-dark-800 border border-gray-600 text-gray-300 rounded-lg text-sm font-medium hover:border-blue-500 hover:text-blue-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {mt5Testing ? <RefreshCw size={14} className="animate-spin" /> : <Plug size={14} />}
-                Test Connection
-              </button>
-              <button
-                onClick={saveMT5Settings}
-                disabled={mt5Saving || !mt5Form.metaApiToken || !mt5Form.accountId}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {mt5Saving ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
-                Save & Connect
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={testMT5Connection}
+                  disabled={mt5Testing || !mt5Form.metaApiToken || !mt5Form.accountId}
+                  className="flex-1 px-4 py-2 bg-dark-800 border border-gray-600 text-gray-300 rounded-lg text-sm font-medium hover:border-blue-500 hover:text-blue-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {mt5Testing ? <RefreshCw size={14} className="animate-spin" /> : <Plug size={14} />}
+                  Test Connection
+                </button>
+                <button
+                  onClick={saveMT5Settings}
+                  disabled={mt5Saving || !mt5Form.metaApiToken || !mt5Form.accountId}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {mt5Saving ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
+                  Save & Connect
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Search & Filter Bar */}

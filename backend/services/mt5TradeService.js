@@ -227,7 +227,7 @@ async function getConnectionStatus() {
       return { connected: false, error: 'MetaApi not configured', source: creds.source }
     }
 
-    // Return cached status if still fresh
+    // Return cached status if still fresh (works for both success and error states)
     if (cachedStatus && (Date.now() - cachedStatusTime) < STATUS_CACHE_TTL) {
       return cachedStatus
     }
@@ -235,29 +235,58 @@ async function getConnectionStatus() {
     const API_BASE = getApiBase(creds.region)
     const url = `${API_BASE}/users/current/accounts/${creds.accountId}/account-information`
     
-    let response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'auth-token': creds.token
-      }
-    })
-
-    // Retry once after delay if rate limited
-    if (response.status === 429) {
-      await new Promise(r => setTimeout(r, 2000))
+    // 8s timeout to prevent hanging
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+    
+    let response
+    try {
       response = await fetch(url, {
         headers: {
           'Accept': 'application/json',
           'auth-token': creds.token
-        }
+        },
+        signal: controller.signal
       })
+    } catch (fetchErr) {
+      clearTimeout(timeout)
+      const errResult = { connected: false, error: fetchErr.name === 'AbortError' ? 'Request timeout' : fetchErr.message, source: creds.source }
+      cachedStatus = errResult
+      cachedStatusTime = Date.now()
+      return errResult
+    }
+    clearTimeout(timeout)
+
+    // Rate limited — cache and return
+    if (response.status === 429) {
+      const errResult = { connected: false, error: 'Rate limited (429) — try again later', source: creds.source }
+      cachedStatus = errResult
+      cachedStatusTime = Date.now()
+      return errResult
     }
 
     if (!response.ok) {
-      if (response.status === 429 && cachedStatus) {
-        return cachedStatus
-      }
-      return { connected: false, error: `HTTP ${response.status}`, source: creds.source }
+      // Parse MetaApi error body for a meaningful message
+      let errorMsg = `HTTP ${response.status}`
+      try {
+        const errBody = await response.json()
+        if (errBody.message) {
+          // Simplify common MetaApi errors
+          if (response.status === 504 || errBody.error === 'TimeoutError') {
+            errorMsg = 'Account not connected to broker. Please deploy the account in MetaApi dashboard or check the region.'
+          } else if (response.status === 403 || errBody.error === 'ForbiddenError') {
+            errorMsg = 'Access denied — token does not have access to this account.'
+          } else {
+            errorMsg = errBody.message
+          }
+        }
+      } catch (e) { /* ignore parse errors */ }
+      
+      const errResult = { connected: false, error: errorMsg, source: creds.source }
+      // Cache error for 30s to avoid repeated slow calls
+      cachedStatus = errResult
+      cachedStatusTime = Date.now()
+      return errResult
     }
 
     const data = await response.json()
@@ -293,21 +322,41 @@ async function testConnection(token, accountId, region = 'new-york') {
     const API_BASE = getApiBase(region)
     const url = `${API_BASE}/users/current/accounts/${accountId}/account-information`
     
-    let response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'auth-token': token
-      }
-    })
-
-    if (response.status === 429) {
-      await new Promise(r => setTimeout(r, 2000))
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000)
+    
+    let response
+    try {
       response = await fetch(url, {
         headers: {
           'Accept': 'application/json',
           'auth-token': token
-        }
+        },
+        signal: controller.signal
       })
+    } catch (fetchErr) {
+      clearTimeout(timeout)
+      return { connected: false, error: fetchErr.name === 'AbortError' ? 'Request timeout' : fetchErr.message }
+    }
+    clearTimeout(timeout)
+
+    if (response.status === 429) {
+      await new Promise(r => setTimeout(r, 2000))
+      const controller2 = new AbortController()
+      const timeout2 = setTimeout(() => controller2.abort(), 10000)
+      try {
+        response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'auth-token': token
+          },
+          signal: controller2.signal
+        })
+      } catch (fetchErr) {
+        clearTimeout(timeout2)
+        return { connected: false, error: 'Rate limited (429)' }
+      }
+      clearTimeout(timeout2)
     }
 
     if (!response.ok) {

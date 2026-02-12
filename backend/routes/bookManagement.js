@@ -113,6 +113,69 @@ router.put('/bulk-assign', async (req, res) => {
   }
 })
 
+// Price feed status cache (60s TTL)
+let priceFeedCache = null
+let priceFeedCacheTime = 0
+const PRICE_FEED_CACHE_TTL = 60000
+
+// GET /api/book-management/price-feed-status - Get price feed account info (.env MetaApi)
+router.get('/price-feed-status', async (req, res) => {
+  try {
+    // Return cached if fresh
+    if (priceFeedCache && (Date.now() - priceFeedCacheTime) < PRICE_FEED_CACHE_TTL) {
+      return res.json(priceFeedCache)
+    }
+
+    const token = process.env.METAAPI_TOKEN || ''
+    const accountId = process.env.METAAPI_ACCOUNT_ID || ''
+    const region = process.env.METAAPI_REGION || 'new-york'
+
+    if (!token || !accountId) {
+      return res.json({ success: true, connected: false, error: 'METAAPI_TOKEN or METAAPI_ACCOUNT_ID not set in .env' })
+    }
+
+    const API_BASE = `https://mt-client-api-v1.${region}.agiliumtrade.ai`
+    const url = `${API_BASE}/users/current/accounts/${accountId}/account-information`
+
+    let response = await fetch(url, {
+      headers: { 'Accept': 'application/json', 'auth-token': token }
+    })
+
+    if (response.status === 429) {
+      // Return cached data if available on rate limit
+      if (priceFeedCache) return res.json(priceFeedCache)
+      await new Promise(r => setTimeout(r, 3000))
+      response = await fetch(url, {
+        headers: { 'Accept': 'application/json', 'auth-token': token }
+      })
+    }
+
+    if (!response.ok) {
+      if (priceFeedCache) return res.json(priceFeedCache)
+      return res.json({ success: true, connected: false, error: `HTTP ${response.status}` })
+    }
+
+    const data = await response.json()
+    priceFeedCache = {
+      success: true,
+      connected: true,
+      server: data.server || 'Unknown',
+      login: data.login || 'Unknown',
+      name: data.name || 'Unknown',
+      balance: data.balance || 0,
+      equity: data.equity || 0,
+      currency: data.currency || 'USD',
+      broker: data.broker || 'Unknown'
+    }
+    priceFeedCacheTime = Date.now()
+    res.json(priceFeedCache)
+  } catch (error) {
+    console.error('Error fetching price feed status:', error)
+    if (priceFeedCache) return res.json(priceFeedCache)
+    res.json({ success: true, connected: false, error: error.message })
+  }
+})
+
 // GET /api/book-management/mt5-status - Get global MT5 connection status for A Book
 router.get('/mt5-status', async (req, res) => {
   try {

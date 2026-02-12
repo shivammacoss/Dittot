@@ -30,7 +30,7 @@ const POPULAR_INSTRUMENTS = {
 
 
 
-// Use Infoway service for categorization
+// Use MetaAPI service for categorization
 
 function categorizeSymbol(symbol) {
 
@@ -218,11 +218,11 @@ router.get('/instruments', async (req, res) => {
 
   try {
 
-    console.log('[Infoway] Returning supported instruments')
+    console.log('[MetaAPI] Returning supported instruments')
 
     
 
-    // Get price cache from Infoway service
+    // Get price cache from MetaAPI service
 
     const priceCache = metaApiPriceService.getPriceCache()
 
@@ -238,7 +238,7 @@ router.get('/instruments', async (req, res) => {
 
     if (symbolsWithPrices.length === 0) {
 
-      console.log('[Infoway] No live prices, returning all default instruments')
+      console.log('[MetaAPI] No live prices, returning all default instruments')
 
       const allInstruments = getAllDefaultInstruments()
 
@@ -280,13 +280,13 @@ router.get('/instruments', async (req, res) => {
 
     
 
-    console.log('[Infoway] Returning', instruments.length, 'instruments with live prices')
+    console.log('[MetaAPI] Returning', instruments.length, 'instruments with live prices')
 
     res.json({ success: true, instruments })
 
   } catch (error) {
 
-    console.error('[Infoway] Error fetching instruments:', error)
+    console.error('[MetaAPI] Error fetching instruments:', error)
 
     res.json({ success: true, instruments: getAllDefaultInstruments() })
 
@@ -478,7 +478,7 @@ router.get('/:symbol', async (req, res) => {
 
   } catch (error) {
 
-    console.error('[Infoway] Error fetching price:', error)
+    console.error('[MetaAPI] Error fetching price:', error)
 
     res.status(500).json({ success: false, message: error.message })
 
@@ -556,7 +556,7 @@ router.post('/batch', async (req, res) => {
 
   } catch (error) {
 
-    console.error('[Infoway] Error fetching batch prices:', error)
+    console.error('[MetaAPI] Error fetching batch prices:', error)
 
     res.status(500).json({ success: false, message: error.message })
 
