@@ -9,6 +9,8 @@ class PriceStreamService {
     this.socket = null
     this.prices = {}
     this.subscribers = new Map()
+    this.accountInfoSubscribers = new Map()
+    this.lastAccountInfo = null
     this.isConnected = false
     this.reconnectAttempts = 0
     this.maxReconnectAttempts = 10
@@ -67,6 +69,20 @@ class PriceStreamService {
       }
     })
 
+    // Handle real-time account info (equity/balance) updates
+    this.socket.on('accountInfo', (data) => {
+      if (data) {
+        this.lastAccountInfo = data
+        this.accountInfoSubscribers.forEach((callback, id) => {
+          try {
+            callback(data)
+          } catch (e) {
+            console.error('[PriceStream] AccountInfo subscriber error:', e)
+          }
+        })
+      }
+    })
+
     this.socket.on('disconnect', () => {
       console.log('[PriceStream] Disconnected')
       this.isConnected = false
@@ -103,8 +119,26 @@ class PriceStreamService {
 
   unsubscribe(id) {
     this.subscribers.delete(id)
-    // Disconnect if no subscribers
-    if (this.subscribers.size === 0) {
+    // Disconnect if no subscribers (price + accountInfo)
+    if (this.subscribers.size === 0 && this.accountInfoSubscribers.size === 0) {
+      this.disconnect()
+    }
+  }
+
+  subscribeAccountInfo(id, callback) {
+    this.accountInfoSubscribers.set(id, callback)
+    if (!this.socket?.connected) {
+      this.connect()
+    }
+    if (this.lastAccountInfo) {
+      callback(this.lastAccountInfo)
+    }
+    return () => this.unsubscribeAccountInfo(id)
+  }
+
+  unsubscribeAccountInfo(id) {
+    this.accountInfoSubscribers.delete(id)
+    if (this.subscribers.size === 0 && this.accountInfoSubscribers.size === 0) {
       this.disconnect()
     }
   }

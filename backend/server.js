@@ -65,6 +65,10 @@ const priceCache = metaApiPriceService.getPriceCache()
 
 // MetaAPI handles all asset classes: Forex, Crypto, Commodities
 
+// Throttled account info emission (max once per second)
+let lastAccountInfoEmit = 0
+const ACCOUNT_INFO_THROTTLE = 1000
+
 // MetaAPI price update handler - emit tick-to-tick updates
 metaApiPriceService.setOnPriceUpdate((symbol, price) => {
   if (priceSubscribers.size > 0) {
@@ -76,6 +80,16 @@ metaApiPriceService.setOnPriceUpdate((symbol, price) => {
       updated: { [symbol]: true },
       timestamp: Date.now()
     })
+
+    // Emit account info (equity/balance) throttled
+    const now = Date.now()
+    if (now - lastAccountInfoEmit >= ACCOUNT_INFO_THROTTLE) {
+      lastAccountInfoEmit = now
+      const accountInfo = metaApiPriceService.getAccountInfo()
+      if (accountInfo) {
+        io.to('prices').emit('accountInfo', accountInfo)
+      }
+    }
   }
 })
 

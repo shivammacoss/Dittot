@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AdminLayout from '../components/AdminLayout'
 import { API_URL } from '../config/api'
+import priceStreamService from '../services/priceStream'
 import { 
   Search, 
   BookOpen, 
@@ -54,6 +55,17 @@ const AdminBookManagement = () => {
     fetchMT5Settings()
     fetchPriceFeedStatus()
   }, [filterBook])
+
+  // Real-time equity/balance via Socket.IO
+  useEffect(() => {
+    const unsub = priceStreamService.subscribeAccountInfo('adminBookMgmt', (info) => {
+      if (info && info.connected) {
+        setPriceFeed(prev => prev ? { ...prev, ...info } : { success: true, ...info })
+        setMt5Status(prev => prev ? { ...prev, mt5: { ...prev.mt5, ...info, source: prev.mt5?.source || 'env' } } : prev)
+      }
+    })
+    return () => unsub()
+  }, [])
 
   useEffect(() => {
     if (message.text) {
